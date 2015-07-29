@@ -1,5 +1,5 @@
-controlPoints = 4;
-
+function alignHistology(varargin)
+if empty(vara
 % % disp('Select histology directory...');
 % % histoDir = uigetdir();
 tifFiles = dir(fullfile(histoDir,'*.TIF'));
@@ -25,28 +25,100 @@ if ~isdir(compressedDir)
 end
 
 jpegFiles = dir(fullfile(compressedDir,'*.jpeg'));
-jpegFiles = {jpegFiles.name};
-imageIds = listdlg('PromptString','Select starting file:',...
+jpegFiles = natsort({jpegFiles.name});
+
+imageIds = [];
+while length(imageIds) < 2
+    imageIds = listdlg('PromptString','Select starting file:',...
                 'SelectionMode','multiple','ListSize',[200 600],...
                 'ListString',jpegFiles);
+end
 
-transformPoints = zeros(length(jpegFiles),controlPoints,2);
-h = figure('position',[0 0 1000 500]);
-for ii=1:length(imageIds)-1
-    cpselect(
-    mytform = fitgeotrans(movingPoints,fixedPoints,'projective');
-    rIM2 = imref2d(size(IM2));
-    IM1registered = imwarp(IM1,mytform,'OutputView',rIM2);
-    figure, imshowpair(IM1registered,IM2,'blend')
+iImage = 1;
+initMag = 25;
+while iImage < length(jpegFiles)
+    if iImage == 1
+        IM1 = imread(fullfile(compressedDir,jpegFiles{imageIds(iImage)}));
+        h = figure;
+        imshow(IM1,'InitialMagnification',initMag);
+        choice = questdlg('Flip horizontal?','','No','Yes','No');
+        switch choice
+            case 'Yes'
+                IM1 = flip(IM1,2);
+                imshow(IM1,'InitialMagnification',initMag);
+        end
+        
+        doRotate = true;
+        imRot = 0;
+        IMtemp = IM1;
+        while doRotate
+            choice = questdlg('Rotate?','','Keep','Clockwise','Counter Clockwise','Keep');
+            switch choice
+                case 'Keep'
+                    doRotate = false;
+                case 'Clockwise'
+                    imRot = imRot - 10;
+                    IMtemp = imrotate(IM1,imRot);
+                    imshow(IMtemp,'InitialMagnification',initMag);
+                case 'Counter Clockwise'
+                    imRot = imRot + 10;
+                    IMtemp = imrotate(IM1,imRot);
+                    imshow(IMtemp,'InitialMagnification',initMag);
+            end
+        end
+        IM1 = IMtemp;
+        close(h);
+        
+        orientatedDir = fullfile(compressedDir,'orientated');
+        if ~isdir(orientatedDir)
+            mkdir(orientatedDir);
+        end
+        imwrite(IM1,fullfile(orientatedDir,jpegFiles{imageIds(iImage)}));
+        
+        h = msgbox('Select 4 or more control points. Press cmd/cntl+W after selection of points.');
+        uiwait(h);
+    else
+        IM1 = IM2registered;
+    end
+    
+    IM2 = imread(fullfile(compressedDir,jpegFiles{imageIds(iImage+1)}));
+    [moving_out,fixed_out] = cpselect(IM2,IM1,'Wait',true);
+    if length(moving_out) >= 4
+        mytform = fitgeotrans(moving_out,fixed_out,'projective');
+        rIM1 = imref2d(size(IM1));
+        IM2registered = imwarp(IM2,mytform,'OutputView',rIM2);
+        h = figure; 
+        imshowpair(IM2registered,IM1,'blend');
+        choice = questdlg('How does it look?','','Keep','Redo','Skip','Keep');
+        switch choice
+            case 'Keep'
+                imwrite(IM2registered,fullfile(orientatedDir,jpegFiles{imageIds(iImage+1)}));
+                iImage = iImage + 1;
+            case 'Redo'
+                continue;
+            case 'Skip'
+                iImage = iImage + 1;
+        end
+        close(h);
+    else
+        choice = questdlg('You must have 4 or more control points.','','Skip','Redo','Exit','Skip');
+        switch choice
+            case 'Skip'
+                iImage = iImage + 1;
+            case 'Redo'
+                continue;
+            case 'Exit'
+                break;
+        end
+    end
+    
+    %are there at least 4 control points?
+    %does the registration look good?
     
 %     registered = imwarp(IM2, mytform);
 %     figure;imshow(registered);
-    
-    pause(2);
 end
-% select start image
-% use line to mark horizontal surgery plane
-% mark points forwards, then backwards
+
 % can I automatically flip the image based on points? I think...
 % save in compressed > orientated
 
