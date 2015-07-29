@@ -1,12 +1,13 @@
 function alignHistology(varargin)
-if empty(varargin)    
+% See Box > Protocols > Histology > Align Protocol.docx
+if isempty(varargin)    
     histoDir = uigetdir(pwd,'Select histology directory');
 else
     histoDir = varargin{1};
 end
 
 tifFiles = dir(fullfile(histoDir,'*.TIF'));
-if empty(tifFiles)
+if isempty(tifFiles)
     error('No TIF files found in directory');
 end
 
@@ -44,7 +45,7 @@ end
 
 iImage = 1;
 initMag = 25;
-while iImage < length(jpegFiles)
+while iImage < length(imageIds)
     if iImage == 1
         IM1 = imread(fullfile(compressedDir,jpegFiles{imageIds(iImage)}));
         h = figure;
@@ -77,13 +78,13 @@ while iImage < length(jpegFiles)
         IM1 = IMtemp;
         close(h);
         
-        orientatedDir = fullfile(compressedDir,'orientated');
-        if ~isdir(orientatedDir)
-            mkdir(orientatedDir);
+        alignedDir = fullfile(compressedDir,'aligned');
+        if ~isdir(alignedDir)
+            mkdir(alignedDir);
         end
-        imwrite(IM1,fullfile(orientatedDir,jpegFiles{imageIds(iImage)}));
+        imwrite(IM1,fullfile(alignedDir,jpegFiles{imageIds(iImage)}));
         
-        h = msgbox('Select 4 or more control points. Press cmd/cntl+W after selection of points.');
+        h = msgbox('Select 4 or more control points. Press cmd/ctrl+W after selection of points.');
         uiwait(h);
     else
         IM1 = IM2registered;
@@ -94,13 +95,13 @@ while iImage < length(jpegFiles)
     if length(moving_out) >= 4
         mytform = fitgeotrans(moving_out,fixed_out,'projective');
         rIM1 = imref2d(size(IM1));
-        IM2registered = imwarp(IM2,mytform,'OutputView',rIM2);
+        IM2registered = imwarp(IM2,mytform,'OutputView',rIM1);
         h = figure; 
         imshowpair(IM2registered,IM1,'blend');
         choice = questdlg('How does it look?','','Keep','Redo','Skip','Keep');
         switch choice
             case 'Keep'
-                imwrite(IM2registered,fullfile(orientatedDir,jpegFiles{imageIds(iImage+1)}));
+                imwrite(IM2registered,fullfile(alignedDir,jpegFiles{imageIds(iImage+1)}));
                 iImage = iImage + 1;
             case 'Redo'
                 continue;
@@ -119,16 +120,4 @@ while iImage < length(jpegFiles)
                 break;
         end
     end
-    
-    %are there at least 4 control points?
-    %does the registration look good?
-    
-%     registered = imwarp(IM2, mytform);
-%     figure;imshow(registered);
 end
-
-% can I automatically flip the image based on points? I think...
-% save in compressed > orientated
-
-% how does this handle canvas size? Will it come into photoshop okay? Do I
-% need to increase canvas size so it rotates correctly?
