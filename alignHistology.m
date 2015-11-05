@@ -6,19 +6,20 @@ else
     histoDir = varargin{1};
 end
 
-tifFiles = dir(fullfile(histoDir,'*.TIF'));
-if isempty(tifFiles)
-    error('No TIF files found in directory');
-end
-
-% sort by date, assumming they are scanned in order
-datenums = cell2mat({tifFiles(:).datenum});
-[~,idx] = sort(datenums);
-tifFiles = {tifFiles(idx).name};
-
-% compress images
+% compress images but skip if dir exists
 compressedDir = fullfile(histoDir,'compressed');
 if ~isdir(compressedDir)
+    % found hidden files in this dir, using R* wildcard
+    tifFiles = dir(fullfile(histoDir,'R*.TIF'));
+    if isempty(tifFiles)
+        error('No TIF files found in directory');
+    end
+
+    % sort by date, assumming they are scanned in order
+    datenums = cell2mat({tifFiles(:).datenum});
+    [~,idx] = sort(datenums);
+    tifFiles = {tifFiles(idx).name};
+
     h = waitbar(0,'Compressing Images');
     mkdir(compressedDir);
     for iTif = 1:length(tifFiles)
@@ -32,10 +33,11 @@ if ~isdir(compressedDir)
 end
 
 % work with compress files
-jpegFiles = dir(fullfile(compressedDir,'*.jpeg'));
+jpegFiles = dir(fullfile(compressedDir,'R*.jpeg'));
 jpegFiles = natsort({jpegFiles.name});
 
 % user selects files to use
+% [] exit on cancel
 imageIds = [];
 while length(imageIds) < 2
     imageIds = listdlg('PromptString','Select starting file:',...
