@@ -1,4 +1,6 @@
 function alignHistology(varargin)
+% use:
+% alignHistology('/Volumes/RecordingsLeventhal2/ChoiceTask/R0125/R0125-histology/Nissl',true);
 % See Box > Protocols > Histology > Align Protocol.docx
 if isempty(varargin)    
     histoDir = uigetdir(pwd,'Select histology directory');
@@ -30,6 +32,10 @@ if ~isdir(compressedDir)
         imwrite(A,fullfile(compressedDir,[tifFiles{iTif},'.jpeg']));
     end
     close(h);
+end
+
+if nargin == 2 % varargin{2} is 'break after compress'
+    return;
 end
 
 % work with compress files
