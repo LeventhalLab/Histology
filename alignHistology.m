@@ -2,6 +2,8 @@ function alignHistology(varargin)
 % use:
 % alignHistology('/Volumes/RecordingsLeventhal2/ChoiceTask/R0125/R0125-histology/Nissl',true);
 % See Box > Protocols > Histology > Align Protocol.docx
+% varargin{2} is 'break after compress'
+
 if isempty(varargin)    
     histoDir = uigetdir(pwd,'Select histology directory');
 else
@@ -12,7 +14,7 @@ end
 compressedDir = fullfile(histoDir,'compressed');
 if ~isdir(compressedDir)
     % found hidden files in this dir, using R* wildcard
-    tifFiles = dir(fullfile(histoDir,'R*.TIF'));
+    tifFiles = dir(fullfile(histoDir,'*.TIF'));
     if isempty(tifFiles)
         error('No TIF files found in directory');
     end
@@ -34,7 +36,7 @@ if ~isdir(compressedDir)
     close(h);
 end
 
-if nargin == 2 % varargin{2} is 'break after compress'
+if nargin == 2
     return;
 end
 
