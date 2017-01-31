@@ -4,6 +4,8 @@ function alignHistology(varargin)
 % See Box > Protocols > Histology > Align Protocol.docx
 % varargin{2} is 'break after compress'
 
+% https://affinity.serif.com/en-us/photo/
+
 if isempty(varargin)    
     histoDir = uigetdir(pwd,'Select histology directory');
 else
@@ -14,7 +16,7 @@ end
 compressedDir = fullfile(histoDir,'compressed');
 if ~isdir(compressedDir)
     % found hidden files in this dir, using R* wildcard
-    tifFiles = dir(fullfile(histoDir,'*.TIF'));
+    tifFiles = [dir(fullfile(histoDir,'*.TIF'));dir(fullfile(histoDir,'*.tif'))];
     if isempty(tifFiles)
         error('No TIF files found in directory');
     end
