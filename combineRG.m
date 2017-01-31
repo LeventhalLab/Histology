@@ -96,9 +96,3 @@ function findMatchingFiles(redFileNames,greenFileNames,redDir,greenDir)
     end
     close(h);
 end
-
-% imred = imread('/Volumes/RecordingsLeventhal2/ChoiceTask/R0142/R0142-histology/R0142-IHC/Processed Images/VGLUT/R0142-VGLUT-slide6a');
-% imgreen = imread('/Volumes/RecordingsLeventhal2/ChoiceTask/R0142/R0142-histology/R0142-IHC/Processed Images/GAD/R0142-GAD-slide6a');
-% 
-% imnew = zeros(size(imred));
-% imnew(1:size(imred))
