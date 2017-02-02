@@ -1,18 +1,13 @@
-redDir = '/Volumes/RecordingsLeventhal2/ChoiceTask/R0142/R0142-histology/R0142-IHC/Processed Images/VGLUT';
-greenDir = '/Volumes/RecordingsLeventhal2/ChoiceTask/R0142/R0142-histology/R0142-IHC/Processed Images/GAD';
-
-% no hidden files
-redFiles = dir2(redDir,'R*');
-redFileNames = natsort({redFiles(:).name}');
-greenFiles = dir2(greenDir,'R*');
-greenFileNames = natsort({greenFiles(:).name}');
-
-findMatchingFiles(redFileNames,greenFileNames,redDir,greenDir)
-
-function findMatchingFiles(redFileNames,greenFileNames,redDir,greenDir)
+function registerAndBlend(redDir,greenDir)
     prefFileExt = '.jpeg';
-% %     saturationFactor = 1.5;
     decorrTols = [0.0,.0002,.001];
+    
+    % no hidden files
+    redFiles = dir2(redDir,'R*');
+    redFileNames = natsort({redFiles(:).name}');
+    greenFiles = dir2(greenDir,'R*');
+    greenFileNames = natsort({greenFiles(:).name}');
+    
     % just use one list, needs to be in both anyways
     splits1 = cellfun(@(x) strsplit(x,'-'),redFileNames,'UniformOutput',false);
     splits2 = cellfun(@(x) x{3},splits1,'UniformOutput',false);
@@ -46,7 +41,9 @@ function findMatchingFiles(redFileNames,greenFileNames,redDir,greenDir)
                 end
             end
             close(h);
-            % call master function for user?
+            % call master function now that files are renamed
+            registerAndBlend(redDir,greenDir);
+            return; % [ ] test this!
         else
             disp('Extensions left unmatched.');
         end
@@ -68,6 +65,7 @@ function findMatchingFiles(redFileNames,greenFileNames,redDir,greenDir)
         imRed = squeeze(imRed(:,:,1));
         [optimizer,metric] = imregconfig('Multimodal');
         % registered should be green transformed [ ] test this
+        disp(['Registering: ',redSlides{redIdx}]);
         [registered,~] = imregister(imGreen,imRed,'similarity',optimizer,metric);
 %         figure; imshowpair(imRed,registered);
         imBlend = cat(3, imRed, registered, zeros(size(imRed)));
