@@ -1,0 +1,266 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>registerAndBlend</title><meta name="generator" content="MATLAB 9.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-02-03"><meta name="DC.source" content="registerAndBlend.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Register and Blend</a></li><li><a href="#5">Dependencies</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> registerAndBlend(redDir,greenDir)
+</pre><h2 id="2">Register and Blend</h2><p>This function attempts to find slide images in two separate directories and blend them specifically using the red and green channels. It has (3) utilities:</p><div><ol><li>Standardizes file name extensions to 'jpeg'</li><li>Registers red and green images (i.e. aligns them)</li><li>Blends the red and green channel and saves multiple versions based   on a decorrelation stretch to intensify saturation.</li></ol></div><h2 id="5">Dependencies</h2><p><a href="matlab:prettyDependencies('registerAndBlend.m')">Show in Terminal</a></p><pre class="codeinput">prefFileExt = <span class="string">'.jpeg'</span>;
+decorrTols = [0.0,.0002,.001];
+
+<span class="comment">% no hidden files</span>
+redFiles = dir2(redDir,<span class="string">'R*'</span>);
+redFileNames = natsort({redFiles(:).name}');
+greenFiles = dir2(greenDir,<span class="string">'R*'</span>);
+greenFileNames = natsort({greenFiles(:).name}');
+
+<span class="comment">% just use one list, needs to be in both anyways</span>
+splits1 = cellfun(@(x) strsplit(x,<span class="string">'-'</span>),redFileNames,<span class="string">'UniformOutput'</span>,false);
+splits2 = cellfun(@(x) x{3},splits1,<span class="string">'UniformOutput'</span>,false);
+[~,redSlides,redExts] = cellfun(@(x) fileparts(x),splits2,<span class="string">'UniformOutput'</span>,false);
+
+splits1 = cellfun(@(x) strsplit(x,<span class="string">'-'</span>),greenFileNames,<span class="string">'UniformOutput'</span>,false);
+splits2 = cellfun(@(x) x{3},splits1,<span class="string">'UniformOutput'</span>,false);
+[~,greenSlides,greenExts] = cellfun(@(x) fileparts(x),splits2,<span class="string">'UniformOutput'</span>,false);
+
+<span class="comment">% make sure file extensions match</span>
+<span class="keyword">if</span> numel(unique([greenExts;redExts])) &gt; 1
+    <span class="comment">% non-standard extensions</span>
+    button = questdlg([<span class="string">'Multiple file extensions found. Can I repair these to '</span>,prefFileExt,<span class="string">'? (required to continue)'</span>],<span class="string">'findEmptySevFiles'</span>,<span class="string">'Yes'</span>,<span class="string">'No'</span>,<span class="string">'No'</span>);
+    <span class="keyword">if</span> strcmp(button,<span class="string">'Yes'</span>)
+        h = waitbar(0,<span class="string">'Moving files...'</span>);
+        useFiles = redFileNames;
+        useDir = redDir;
+        totalFiles = numel(redFileNames) + numel(greenFileNames);
+        fileCount = 1;
+        <span class="keyword">for</span> ii = 1:2
+            <span class="keyword">if</span> ii == 2; useFiles = greenFileNames; useDir = greenDir; <span class="keyword">end</span>;
+            <span class="keyword">for</span> iFile = 1:length(useFiles)
+                waitbar(fileCount/totalFiles,h);
+                [~,name,ext] = fileparts(useFiles{iFile});
+                src = fullfile(useDir,[name,ext]);
+                dest = fullfile(useDir,[name,prefFileExt]);
+                <span class="keyword">if</span> ~strcmp(src,dest)
+                    movefile(src,dest);
+                <span class="keyword">end</span>
+                fileCount = fileCount + 1;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+        close(h);
+        <span class="comment">% call master function now that files are renamed</span>
+        registerAndBlend(redDir,greenDir);
+        <span class="keyword">return</span>; <span class="comment">% [ ] test this!</span>
+    <span class="keyword">else</span>
+        disp(<span class="string">'Extensions left unmatched.'</span>);
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% perform registration</span>
+<span class="comment">% idxs of strings in unordered A&amp;&amp;B</span>
+matchIdx = ismember(redSlides,greenSlides);
+h = waitbar(0,<span class="string">''</span>);
+<span class="keyword">for</span> redIdx = 1:length(matchIdx)
+    <span class="keyword">if</span> ~matchIdx(redIdx); <span class="keyword">continue</span>; <span class="keyword">end</span>;
+    [~,greenIdx] = ismember(redSlides(redIdx),greenSlides);
+    waitbar(redIdx/length(matchIdx),h,[redSlides{redIdx},<span class="string">' [registering]...'</span>]);
+    greenFile = fullfile(greenDir,greenFileNames{greenIdx});
+    redFile = fullfile(redDir,redFileNames{redIdx});
+    imGreen = imread(greenFile);
+    imGreen = squeeze(imGreen(:,:,2));
+    imRed = imread(redFile);
+    imRed = squeeze(imRed(:,:,1));
+    [optimizer,metric] = imregconfig(<span class="string">'Multimodal'</span>);
+    <span class="comment">% registered should be green transformed [ ] test this</span>
+    disp([<span class="string">'Registering: '</span>,redSlides{redIdx}]);
+    [registered,~] = imregister(imGreen,imRed,<span class="string">'similarity'</span>,optimizer,metric);
+<span class="comment">%         figure; imshowpair(imRed,registered);</span>
+    imBlend = cat(3, imRed, registered, zeros(size(imRed)));
+    saveDir = strsplit(redDir,filesep);
+    saveDir = strjoin(saveDir(1:end-1),filesep);
+    <span class="keyword">for</span> iTols = 1:size(decorrTols,2)
+        tolStr = strrep(num2str(decorrTols(iTols)),<span class="string">'.'</span>,<span class="string">'-'</span>);
+        blendDir = fullfile(saveDir,[<span class="string">'blended_tol'</span>,tolStr]);
+        <span class="comment">% mkdir on first loop</span>
+        <span class="keyword">if</span> redIdx == 1
+            <span class="keyword">if</span> ~exist(blendDir)
+                mkdir(blendDir);
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+        waitbar(redIdx/length(matchIdx),h,[redSlides{redIdx},<span class="string">' [registering] --&gt; [writing tol'</span>,tolStr,<span class="string">']...'</span>]);
+        S = decorrstretch(imBlend,<span class="string">'tol'</span>,decorrTols(iTols));
+        blendSavePath = fullfile(blendDir,[strjoin([splits1{1,1}{1},redSlides(redIdx),tolStr],<span class="string">'-'</span>),prefFileExt]);
+        imwrite(S,blendSavePath);
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+close(h);
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2016b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function registerAndBlend(redDir,greenDir)
+
+%% Register and Blend
+% This function attempts to find slide images in two separate directories
+% and blend them specifically using the red and green channels.
+% It has (3) utilities:
+%%
+% # Standardizes file name extensions to 'jpeg'
+% # Registers red and green images (i.e. aligns them)
+% # Blends the red and green channel and saves multiple versions based
+%   on a decorrelation stretch to intensify saturation.
+%%
+%% Dependencies
+% <matlab:prettyDependencies('registerAndBlend.m') Show in Terminal>
+
+
+prefFileExt = '.jpeg';
+decorrTols = [0.0,.0002,.001];
+
+% no hidden files
+redFiles = dir2(redDir,'R*');
+redFileNames = natsort({redFiles(:).name}');
+greenFiles = dir2(greenDir,'R*');
+greenFileNames = natsort({greenFiles(:).name}');
+
+% just use one list, needs to be in both anyways
+splits1 = cellfun(@(x) strsplit(x,'-'),redFileNames,'UniformOutput',false);
+splits2 = cellfun(@(x) x{3},splits1,'UniformOutput',false);
+[~,redSlides,redExts] = cellfun(@(x) fileparts(x),splits2,'UniformOutput',false);
+
+splits1 = cellfun(@(x) strsplit(x,'-'),greenFileNames,'UniformOutput',false);
+splits2 = cellfun(@(x) x{3},splits1,'UniformOutput',false);
+[~,greenSlides,greenExts] = cellfun(@(x) fileparts(x),splits2,'UniformOutput',false);
+
+% make sure file extensions match
+if numel(unique([greenExts;redExts])) > 1
+    % non-standard extensions
+    button = questdlg(['Multiple file extensions found. Can I repair these to ',prefFileExt,'? (required to continue)'],'findEmptySevFiles','Yes','No','No');
+    if strcmp(button,'Yes')
+        h = waitbar(0,'Moving files...');
+        useFiles = redFileNames;
+        useDir = redDir;
+        totalFiles = numel(redFileNames) + numel(greenFileNames);
+        fileCount = 1;
+        for ii = 1:2
+            if ii == 2; useFiles = greenFileNames; useDir = greenDir; end;
+            for iFile = 1:length(useFiles)
+                waitbar(fileCount/totalFiles,h);
+                [~,name,ext] = fileparts(useFiles{iFile});
+                src = fullfile(useDir,[name,ext]);
+                dest = fullfile(useDir,[name,prefFileExt]);
+                if ~strcmp(src,dest)
+                    movefile(src,dest);
+                end
+                fileCount = fileCount + 1;
+            end
+        end
+        close(h);
+        % call master function now that files are renamed
+        registerAndBlend(redDir,greenDir);
+        return; % [ ] test this!
+    else
+        disp('Extensions left unmatched.');
+    end
+end
+
+% perform registration
+% idxs of strings in unordered A&&B
+matchIdx = ismember(redSlides,greenSlides);
+h = waitbar(0,'');
+for redIdx = 1:length(matchIdx)
+    if ~matchIdx(redIdx); continue; end;
+    [~,greenIdx] = ismember(redSlides(redIdx),greenSlides);
+    waitbar(redIdx/length(matchIdx),h,[redSlides{redIdx},' [registering]...']);
+    greenFile = fullfile(greenDir,greenFileNames{greenIdx});
+    redFile = fullfile(redDir,redFileNames{redIdx});
+    imGreen = imread(greenFile);
+    imGreen = squeeze(imGreen(:,:,2));
+    imRed = imread(redFile);
+    imRed = squeeze(imRed(:,:,1));
+    [optimizer,metric] = imregconfig('Multimodal');
+    % registered should be green transformed [ ] test this
+    disp(['Registering: ',redSlides{redIdx}]);
+    [registered,~] = imregister(imGreen,imRed,'similarity',optimizer,metric);
+%         figure; imshowpair(imRed,registered);
+    imBlend = cat(3, imRed, registered, zeros(size(imRed)));
+    saveDir = strsplit(redDir,filesep);
+    saveDir = strjoin(saveDir(1:end-1),filesep);
+    for iTols = 1:size(decorrTols,2)
+        tolStr = strrep(num2str(decorrTols(iTols)),'.','-');
+        blendDir = fullfile(saveDir,['blended_tol',tolStr]);
+        % mkdir on first loop
+        if redIdx == 1
+            if ~exist(blendDir)
+                mkdir(blendDir);
+            end
+        end
+        waitbar(redIdx/length(matchIdx),h,[redSlides{redIdx},' [registering] REPLACE_WITH_DASH_DASH> [writing tol',tolStr,']...']);
+        S = decorrstretch(imBlend,'tol',decorrTols(iTols));
+        blendSavePath = fullfile(blendDir,[strjoin([splits1{1,1}{1},redSlides(redIdx),tolStr],'-'),prefFileExt]);
+        imwrite(S,blendSavePath);
+    end
+end
+close(h);
+
+##### SOURCE END #####
+--></body></html>
