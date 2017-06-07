@@ -25,11 +25,11 @@ greenFileNames = natsort({greenFiles(:).name}');
 
 % just use one list, needs to be in both anyways
 splits1 = cellfun(@(x) strsplit(x,'-'),redFileNames,'UniformOutput',false);
-splits2 = cellfun(@(x) x{3},splits1,'UniformOutput',false);
+splits2 = cellfun(@(x) x{4},splits1,'UniformOutput',false);
 [~,redSlides,redExts] = cellfun(@(x) fileparts(x),splits2,'UniformOutput',false);
 
 splits1 = cellfun(@(x) strsplit(x,'-'),greenFileNames,'UniformOutput',false);
-splits2 = cellfun(@(x) x{3},splits1,'UniformOutput',false);
+splits2 = cellfun(@(x) x{4},splits1,'UniformOutput',false);
 [~,greenSlides,greenExts] = cellfun(@(x) fileparts(x),splits2,'UniformOutput',false);
 
 % make sure file extensions match

@@ -1,4 +1,4 @@
-function alignHistology(varargin)
+function alignHistology(histoDir,onlyCompress)
 % use:
 % alignHistology('/Volumes/RecordingsLeventhal2/ChoiceTask/R0125/R0125-histology/Nissl',true);
 % See Box > Protocols > Histology > Align Protocol.docx
@@ -6,10 +6,8 @@ function alignHistology(varargin)
 
 % https://affinity.serif.com/en-us/photo/
 
-if isempty(varargin)    
+if isempty(histoDir)    
     histoDir = uigetdir(pwd,'Select histology directory');
-else
-    histoDir = varargin{1};
 end
 
 % compress images but skip if dir exists
@@ -38,7 +36,7 @@ if ~isdir(compressedDir)
     close(h);
 end
 
-if nargin == 2
+if onlyCompress
     return;
 end
 
